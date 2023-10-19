@@ -7,6 +7,7 @@ import { useState } from "react";
 import { logInUser } from "../utils/Auth";
 import { useDispatch } from "react-redux";
 import { addToken } from "../store/authSlice";
+import AsyncStorage from "@react-native-async-storage/async-storage";
 
 const initialState = {
   email: "",
@@ -41,11 +42,10 @@ export default function LogInForm() {
       const res = await logInUser(inputValues.email, inputValues.password);
       const token = res.idToken;
 
-      // console.log("res", token);
-
+      await AsyncStorage.setItem("token", token);
       dispatch(addToken(token));
-      // console.log(res);
     } catch (error) {
+      console.log(error);
       Alert.alert(
         "Incorrect Email or Password",
         "Check your email or password and try again",

@@ -6,6 +6,7 @@ import { useNavigation } from "@react-navigation/native";
 import { useState } from "react";
 import { createUser, signUpUser } from "../utils/Auth";
 import { useDispatch } from "react-redux";
+import AsyncStorage from "@react-native-async-storage/async-storage";
 
 const initialState = {
   email: "",
@@ -48,6 +49,7 @@ export default function SignUpForm() {
 
         const token = res.idToken;
         dispatch(addToken(token));
+        await AsyncStorage.setItem("token", token);
       } catch (error) {
         console.log(error);
         Alert.alert(
