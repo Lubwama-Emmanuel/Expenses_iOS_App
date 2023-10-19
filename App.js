@@ -1,20 +1,171 @@
-import { StatusBar } from 'expo-status-bar';
-import { StyleSheet, Text, View } from 'react-native';
+import * as React from "react";
+import { NavigationContainer } from "@react-navigation/native";
+import { createNativeStackNavigator } from "@react-navigation/native-stack";
+import { createBottomTabNavigator } from "@react-navigation/bottom-tabs";
+import { Ionicons } from "@expo/vector-icons";
+import { store } from "./store/store";
+import { Provider, useDispatch, useSelector } from "react-redux";
 
-export default function App() {
+import RecentExpensesScreen from "./screens/RecentExpensesScreen";
+import AllExpensesScreen from "./screens/AllExpensesScreen";
+import ManageExpense from "./screens/ManageExpense";
+import IconBtn from "./ui/IconBtn";
+import { colors } from "./resources/GlobalStyles";
+import LoginScreen from "./screens/LoginScreen";
+import SignUpScreen from "./screens/SignUpScreen";
+import { logOut } from "./store/authSlice";
+
+const Tab = createBottomTabNavigator();
+const Stack = createNativeStackNavigator();
+
+function AuthNavigation() {
   return (
-    <View style={styles.container}>
-      <Text>Open up App.js to start working on your app!</Text>
-      <StatusBar style="auto" />
-    </View>
+    <Stack.Navigator
+      screenOptions={{
+        headerStyle: {
+          backgroundColor: colors.primary950,
+          height: 110,
+        },
+        headerTintColor: "#fff",
+        contentStyle: {
+          backgroundColor: "#4c1d95",
+        },
+      }}
+    >
+      <Stack.Screen
+        name="signUp"
+        component={SignUpScreen}
+        options={{
+          title: "SignUp",
+        }}
+      />
+      <Stack.Screen
+        name="logIn"
+        component={LoginScreen}
+        options={{
+          title: "LogIn",
+        }}
+      />
+    </Stack.Navigator>
   );
 }
 
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: '#fff',
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-});
+function TabNavigator() {
+  const dispatch = useDispatch();
+
+  function loggingOut() {
+    dispatch(logOut());
+  }
+  return (
+    <Tab.Navigator
+      sceneContainerStyle={{
+        backgroundColor: colors.primary900,
+      }}
+      screenOptions={({ navigation }) => ({
+        headerStyle: {
+          backgroundColor: colors.primary950,
+          height: 110,
+        },
+        headerTintColor: "#fff",
+
+        headerLeft: ({ tintColor }) => (
+          <IconBtn
+            name={"exit"}
+            size={24}
+            color={tintColor}
+            onPress={loggingOut}
+          />
+        ),
+        headerRight: ({ tintColor }) => (
+          <IconBtn
+            name={"add"}
+            size={24}
+            color={tintColor}
+            onPress={() => {
+              navigation.navigate("ManageExpenses");
+            }}
+          />
+        ),
+        tabBarStyle: {
+          backgroundColor: colors.primary950,
+        },
+        tabBarActiveTintColor: "#fff",
+      })}
+    >
+      <Tab.Screen
+        name="Recent"
+        component={RecentExpensesScreen}
+        options={{
+          title: "Recent",
+          tabBarIcon: ({ color, size }) => (
+            <Ionicons name="time" color={color} size={size} />
+          ),
+        }}
+      />
+      <Tab.Screen
+        name="All Expenses"
+        component={AllExpensesScreen}
+        options={{
+          title: "All Expenses",
+          tabBarIcon: ({ color, size }) => (
+            <Ionicons name="calendar" color={color} size={size} />
+          ),
+        }}
+      />
+    </Tab.Navigator>
+  );
+}
+
+function ProtectedScreens() {
+  return (
+    <Stack.Navigator
+      screenOptions={{
+        headerStyle: {
+          backgroundColor: colors.primary950,
+        },
+        headerTintColor: "#fff",
+      }}
+    >
+      <Stack.Screen
+        name="Expenses"
+        component={TabNavigator}
+        options={{
+          headerShown: false,
+        }}
+      />
+      <Stack.Screen
+        name="ManageExpenses"
+        component={ManageExpense}
+        options={{
+          presentation: "modal",
+          contentStyle: {
+            backgroundColor: "#4c1d95",
+          },
+        }}
+      />
+    </Stack.Navigator>
+  );
+}
+
+function Navigation() {
+  const authStore = useSelector((state) => state.auth);
+
+  const token = authStore.token;
+
+  return (
+    <>
+      {!token && <AuthNavigation />}
+      {token && <ProtectedScreens />}
+    </>
+  );
+}
+
+export default function App() {
+  return (
+    <Provider store={store}>
+      <NavigationContainer>
+        <Navigation />
+      </NavigationContainer>
+    </Provider>
+  );
+}
