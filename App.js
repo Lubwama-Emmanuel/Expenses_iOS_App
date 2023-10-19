@@ -5,6 +5,9 @@ import { createBottomTabNavigator } from "@react-navigation/bottom-tabs";
 import { Ionicons } from "@expo/vector-icons";
 import { store } from "./store/store";
 import { Provider, useDispatch, useSelector } from "react-redux";
+import AsyncStorage from "@react-native-async-storage/async-storage";
+import AppLoading from "expo-app-loading";
+import * as SplashScreen from "expo-splash-screen";
 
 import RecentExpensesScreen from "./screens/RecentExpensesScreen";
 import AllExpensesScreen from "./screens/AllExpensesScreen";
@@ -13,10 +16,12 @@ import IconBtn from "./ui/IconBtn";
 import { colors } from "./resources/GlobalStyles";
 import LoginScreen from "./screens/LoginScreen";
 import SignUpScreen from "./screens/SignUpScreen";
-import { logOut } from "./store/authSlice";
+import { addToken, logOut } from "./store/authSlice";
 
 const Tab = createBottomTabNavigator();
 const Stack = createNativeStackNavigator();
+
+SplashScreen.preventAutoHideAsync();
 
 function AuthNavigation() {
   return (
@@ -148,9 +153,35 @@ function ProtectedScreens() {
 }
 
 function Navigation() {
+  const [isCheckingLoading, setIsCheckingLoading] = React.useState(true);
   const authStore = useSelector((state) => state.auth);
+  const dispatch = useDispatch();
 
   const token = authStore.token;
+
+  React.useEffect(() => {
+    async function fetchToken() {
+      const storedToken = await AsyncStorage.getItem("token");
+
+      if (storedToken) {
+        dispatch(addToken(storedToken));
+      }
+
+      setIsCheckingLoading(false);
+
+      // Hide the splash screen when the initialization is complete
+      SplashScreen.hideAsync();
+    }
+
+    // Show the splash screen while initializing
+
+    fetchToken();
+  }, []);
+
+  if (isCheckingLoading) {
+    // Return null here to hide the content and show the splash screen
+    return null;
+  }
 
   return (
     <>
