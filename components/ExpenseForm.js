@@ -1,4 +1,4 @@
-import { View, StyleSheet } from "react-native";
+import { View, StyleSheet, Alert, Image, Text } from "react-native";
 import { useState } from "react";
 import Input from "../ui/Input";
 import Button from "../ui/Button";
@@ -7,13 +7,28 @@ import { useDispatch } from "react-redux";
 import { addExpense } from "../store/expenseSlice";
 import IconBtn from "../ui/IconBtn";
 
+import {
+  launchCameraAsync,
+  useCameraPermissions,
+  PermissionStatus,
+  launchImageLibraryAsync,
+  useMediaLibraryPermissions,
+} from "expo-image-picker";
+
+const intialState = {
+  amount: "",
+  date: "",
+  description: "",
+};
+
 export default function ExpenseForm({ isEditing }) {
   const navigation = useNavigation();
-  const [inputValues, setInputValues] = useState({
-    amount: "",
-    date: "",
-    description: "",
-  });
+  const [cameraPermissionStatus, requestCameraPermission] =
+    useCameraPermissions();
+  const [mediaPermissionStatus, requestMediaPermission] =
+    useMediaLibraryPermissions();
+  const [selectedImage, setSelectedImage] = useState("");
+  const [inputValues, setInputValues] = useState(intialState);
   const dispatch = useDispatch();
 
   function handleInputValues(inputField, enteredValue) {
@@ -31,6 +46,7 @@ export default function ExpenseForm({ isEditing }) {
     name: inputValues.description,
     amount: +inputValues.amount,
     date: inputValues.date,
+    imageUri: selectedImage,
   };
 
   function handleAddExpense() {
@@ -45,6 +61,86 @@ export default function ExpenseForm({ isEditing }) {
     dispatch(addExpense(expense));
     navigation.goBack();
   }
+
+  async function verifyCameraPermission() {
+    if (cameraPermissionStatus.status === PermissionStatus.UNDETERMINED) {
+      const permissionResponse = await requestCameraPermission();
+
+      return permissionResponse.granted;
+    }
+
+    if (cameraPermissionStatus.status === PermissionStatus.DENIED) {
+      const permissionResponse = await requestCameraPermission();
+
+      return permissionResponse.granted;
+      // Alert.alert(
+      //   "Insufficient Permissions",
+      //   "Please allow the app to access your camera",
+      //   "Okay"
+      // );
+    }
+
+    return true;
+  }
+
+  async function verifyMediaPermission() {
+    if (mediaPermissionStatus.status === PermissionStatus.UNDETERMINED) {
+      const permissionResponse = await requestMediaPermission();
+
+      return permissionResponse.granted;
+    }
+
+    if (mediaPermissionStatus.status === PermissionStatus.DENIED) {
+      const permissionResponse = await requestMediaPermission();
+
+      return permissionResponse.granted;
+    }
+
+    return true;
+  }
+
+  async function handleTakeImage() {
+    const cameraPermissions = await verifyCameraPermission();
+
+    if (!cameraPermissions) {
+      return;
+    }
+
+    const image = await launchCameraAsync({
+      // allowsEditing: true,
+      aspect: [16, 9],
+      quality: 0.5,
+      mediaTypes: "All",
+      presentationStyle: "popover",
+    });
+
+    setSelectedImage(image.uri);
+  }
+
+  async function handleChooseImage() {
+    const mediaPermissions = await verifyMediaPermission();
+
+    if (!mediaPermissions) {
+      return;
+    }
+    const media = await launchImageLibraryAsync({ allowsEditing: true });
+
+    setSelectedImage(media.uri);
+  }
+
+  // let imagePreview = <Text>No Image yet</Text>;
+
+  // if (selectedImage) {
+  //   imagePreview = (
+  //     <Image
+  //       source={{ uri: selectedImage }}
+  //       style={{
+  //         width: "100%",
+  //         height: "100%",
+  //       }}
+  //     />
+  //   );
+  // }
 
   return (
     <View style={styles.container}>
@@ -74,6 +170,16 @@ export default function ExpenseForm({ isEditing }) {
           value: inputValues.description,
         }}
       />
+      {/* <View
+        style={{
+          width: "100%",
+          height: 200,
+        }}
+      >
+        {imagePreview}
+      </View> */}
+      <Button onPress={handleTakeImage}>Take Image</Button>
+      <Button onPress={handleChooseImage}>Choose Image</Button>
       <View style={styles.btnContainer}>
         <Button onPress={handleCancel}>cancel</Button>
         {isEditing ? (
