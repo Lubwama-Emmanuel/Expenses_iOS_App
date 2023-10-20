@@ -6,7 +6,6 @@ import { Ionicons } from "@expo/vector-icons";
 import { store } from "./store/store";
 import { Provider, useDispatch, useSelector } from "react-redux";
 import AsyncStorage from "@react-native-async-storage/async-storage";
-import AppLoading from "expo-app-loading";
 import * as SplashScreen from "expo-splash-screen";
 
 import RecentExpensesScreen from "./screens/RecentExpensesScreen";
@@ -17,6 +16,7 @@ import { colors } from "./resources/GlobalStyles";
 import LoginScreen from "./screens/LoginScreen";
 import SignUpScreen from "./screens/SignUpScreen";
 import { addToken, logOut } from "./store/authSlice";
+import { init } from "./utils/database";
 
 const Tab = createBottomTabNavigator();
 const Stack = createNativeStackNavigator();
@@ -161,6 +161,9 @@ function Navigation() {
 
   React.useEffect(() => {
     async function fetchToken() {
+      const dbRes = await init();
+
+      console.log(dbRes);
       const storedToken = await AsyncStorage.getItem("token");
 
       if (storedToken) {

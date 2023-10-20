@@ -5,7 +5,7 @@ import axios from "axios";
 
 async function Authenticate(mode, email, password) {
   const response = await axios.post(
-    `https://identitytoolkit.googleapis.com/v1/accounts:${mode}?key=${process.env.API_KEY}`,
+    `https://identitytoolkit.googleapis.com/v1/accounts:${mode}?key=AIzaSyAQFGCwBGSQFwYZJDtrQdm1rET_vylANAE`,
     {
       email: email,
       password: password,
