@@ -1,7 +1,6 @@
 import { Image, Pressable } from "react-native";
 import { View, Text, StyleSheet } from "react-native";
 import { useNavigation } from "@react-navigation/native";
-import { useLayoutEffect } from "react";
 
 export default function Expense({ item }) {
   const { name, amount, id, date, imageUri } = item;
